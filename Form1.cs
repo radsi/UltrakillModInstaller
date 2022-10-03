@@ -149,21 +149,28 @@ namespace Ultrakill_Mod_Installer
                 }
                 xMultiplier += 16;
             }
-            
 
-            if (File.Exists(imgPath) && new FileInfo(imgPath).Length > 0)
+            try
             {
-                thumbnail = Image.FromFile(imgPath);
-            }
-            else
-            {
-                if ((string)mod["thumbnail"] != "none" && (string)mod["thumbnail"] != "" && (string)mod["thumbnail"] != null)
+                if (File.Exists(imgPath) && new FileInfo(imgPath).Length > 0)
                 {
-                    if (!Directory.Exists(modsImgFolder)) Directory.CreateDirectory(modsImgFolder);
-
-                    WebClient webClient = new WebClient();
-                    webClient.DownloadFileAsync(new Uri((string)mod["thumbnail"]), imgPath);
+                    thumbnail = Image.FromFile(imgPath);
                 }
+                else
+                {
+                    if ((string)mod["thumbnail"] != "none" && (string)mod["thumbnail"] != "" && (string)mod["thumbnail"] != null)
+                    {
+                        if (!Directory.Exists(modsImgFolder)) Directory.CreateDirectory(modsImgFolder);
+
+                        WebClient webClient = new WebClient();
+                        webClient.DownloadFileAsync(new Uri((string)mod["thumbnail"]), imgPath);
+                    }
+                }
+            }
+            catch(OutOfMemoryException e)
+            {
+                WebClient webClient = new WebClient();
+                webClient.DownloadFileAsync(new Uri((string)mod["thumbnail"]), imgPath);
             }
 
             int XcardMath = 29 * xMultiplier;
