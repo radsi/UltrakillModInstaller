@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using Ultrakill_Mod_Installer.Properties;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace Ultrakill_Mod_Installer
 {
@@ -46,6 +47,21 @@ namespace Ultrakill_Mod_Installer
             return GetAllControls(container, new List<Control>());
         }
 
+        public string getModLastVersion(string repoUrl)
+        {
+            var splitedUrl = repoUrl.Split('/');
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(String.Format("https://api.github.com/repos/{0}/{1}/releases", splitedUrl[3], splitedUrl[4]));
+
+            request.UserAgent = @"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36";
+            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8";
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            string dataRaw = new StreamReader(response.GetResponseStream()).ReadToEnd();
+            var data = (JArray)JsonConvert.DeserializeObject(dataRaw, new JsonSerializerSettings() { DateParseHandling = DateParseHandling.None });
+            return (string)data[0]["assets"][0]["browser_download_url"];
+        }
+
         void installUMM(object sender, EventArgs e)
         {
             if (!bunifuTextBox1.Text.Contains(@"\common\ULTRAKILL"))
@@ -67,7 +83,7 @@ namespace Ultrakill_Mod_Installer
 
             WebClient webClient = new WebClient();
             webClient.DownloadFileCompleted += new AsyncCompletedEventHandler(UMMDownloadComplete);
-            webClient.DownloadFileAsync(new Uri("https://github.com/Temperz87/ultra-mod-manager/releases/download/0.4.2/UMM.v0.4.2.zip"), Path.Combine(bunifuTextBox1.Text, "UMM.v0.4.2.zip"));
+            webClient.DownloadFileAsync(new Uri(getModLastVersion("https://github.com/Temperz87/ultra-mod-manager")), Path.Combine(bunifuTextBox1.Text, "UMM.v0.4.2.zip"));
         }
 
         void UMMDownloadComplete(object sender, AsyncCompletedEventArgs e)
@@ -478,6 +494,8 @@ namespace Ultrakill_Mod_Installer
 
         private void clickCard(object sender_, EventArgs e_, string url, bool useUMM)
         {
+            url = getModLastVersion(url);
+
             if (!bunifuTextBox1.Text.Contains(@"\common\ULTRAKILL"))
             {
                 MessageBox.Show("Provide a valid game folder.");
@@ -493,12 +511,11 @@ namespace Ultrakill_Mod_Installer
             WebClient webClient = new WebClient();
 
             string filePath = useUMM ? $@"{bunifuTextBox1.Text}\BepInEx\UMM Mods\{url.Split('/')[url.Split('/').Length - 1]}" : $@"{bunifuTextBox1.Text}\BepInEx\plugins\{url.Split('/')[url.Split('/').Length - 1]}";
-            string folderPath = !useUMM ? $@"{bunifuTextBox1.Text}\BepInEx\UMM Mods\" : $@"{bunifuTextBox1.Text}\BepInEx\plugins\";
+            string folderPath = !useUMM ? $@"{bunifuTextBox1.Text}\BepInEx\plugins\" : $@"{bunifuTextBox1.Text}\BepInEx\UMM Mods\";
 
             if (url.EndsWith(".rar") || url.EndsWith(".zip"))
             {
-               
-               webClient.DownloadFileCompleted += new AsyncCompletedEventHandler((sender, e) => installCompressedMod(sender, e, filePath, folderPath));
+               webClient.DownloadFileCompleted += new AsyncCompletedEventHandler((sender, e) => installCompressedMod(sender, e, filePath, folderPath, useUMM));
                webClient.DownloadFileAsync(new Uri(url), filePath);
                MessageBox.Show($"{Path.GetFileNameWithoutExtension(url.Split('/')[url.Split('/').Length - 1])} installed");
             }
@@ -513,13 +530,13 @@ namespace Ultrakill_Mod_Installer
             }
         }
 
-        void installCompressedMod(object sender, AsyncCompletedEventArgs e, string filePath, string folderPath)
+        void installCompressedMod(object sender, AsyncCompletedEventArgs e, string filePath, string folderPath, bool useUMM)
         {
             using (ZipFile zip1 = ZipFile.Read(filePath))
-            {  
+            {
                 foreach (ZipEntry z in zip1)
                 {
-                    if (zip1.Entries.First().IsDirectory)
+                    if (zip1.Entries.First().IsDirectory && useUMM)
                     {
                         z.Extract(bunifuTextBox1.Text, ExtractExistingFileAction.OverwriteSilently);
                     }

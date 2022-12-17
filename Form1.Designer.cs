@@ -249,8 +249,6 @@ namespace Ultrakill_Mod_Installer
             this.Controls.Add(this.button1);
             this.Controls.Add(this.bunifuTextBox1);
             this.ForeColor = System.Drawing.Color.White;
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "Ultrakill Mod Installer";
             this.Load += new System.EventHandler(this.Form1_Load);
