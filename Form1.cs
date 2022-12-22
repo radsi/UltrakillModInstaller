@@ -121,8 +121,7 @@ namespace Ultrakill_Mod_Installer
                 return;
             }
 
-            bool is64bitOS = Environment.Is64BitOperatingSystem;
-            string downloadUrl = is64bitOS ? "https://github.com/BepInEx/BepInEx/releases/download/v5.4.21/BepInEx_x64_5.4.21.0.zip" : "https://github.com/BepInEx/BepInEx/releases/download/v5.4.21/BepInEx_x86_5.4.21.0.zip";
+            string downloadUrl = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.21/BepInEx_x64_5.4.21.0.zip";
             string downloadFile = Path.Combine(bunifuTextBox1.Text, $"{downloadUrl.Split('/')[8]}");
 
             WebClient webClient = new WebClient();
